@@ -1,18 +1,40 @@
 package de.htwg.sudoku;
 
-import de.htwg.sudoku.controller.SudokuController;
-import de.htwg.sudoku.entities.Grid;
-import de.htwg.sudoku.tui.TextUI;
+import java.util.Scanner;
 
-public class Sudoku {
+import org.apache.log4j.PropertyConfigurator;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+
+import de.htwg.sudoku.aview.gui.SudokuFrame;
+import de.htwg.sudoku.aview.tui.TextUI;
+import de.htwg.sudoku.controller.ISudokuController;
+
+public final class Sudoku {
+
+	private static Scanner scanner;
+	 
 	public static void main(String[] args) {
-		TextUI tui = new TextUI(new SudokuController(new Grid(3)));
+		// Set up logging through log4j
+		PropertyConfigurator.configure("log4j.properties");
+		
+		// Set up Google Guice Dependency Injector
+		Injector injector = Guice.createInjector(new SudokuModule());
+		
+		// Build up the application, resolving dependencies automatically by Guice
+		ISudokuController controller = injector.getInstance(ISudokuController.class);
+		@SuppressWarnings("unused")
+		SudokuFrame gui = injector.getInstance(SudokuFrame.class);
+		TextUI tui = injector.getInstance(TextUI.class);
 		tui.printTUI();
+		controller.create();
+		
 		// continue until the user decides to quit
-		boolean quit = false;
-		while (!quit) {
-		    quit = tui.iterate();		
+		boolean continu = true;
+		scanner = new Scanner(System.in);
+		while (continu) {
+		    continu = tui.processInputLine(scanner.next());		
 		}
 	}
 
